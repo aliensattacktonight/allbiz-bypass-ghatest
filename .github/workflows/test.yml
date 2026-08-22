@@ -79,6 +79,7 @@ jobs:
               browser = await uc.start(
                   headless=False,
                   no_sandbox=True,
+                  browser_executable_path="/usr/bin/google-chrome",
                   browser_args=[
                       "--window-size=1280,900",
                       "--disable-dev-shm-usage",
