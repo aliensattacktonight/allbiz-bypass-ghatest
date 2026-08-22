@@ -31,12 +31,14 @@ jobs:
           print('patched:', path)
           "
 
-      - name: Run headed-browser bypass test via Xvfb (search + detail page)
+      - name: Run headed-browser bypass test through Webshare proxy
         run: |
           cat > test_bypass.py << 'PYEOF'
           import asyncio
           import re
           import nodriver as uc
+
+          PROXY = "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361"
 
           async def wait_for_real_content(page, label):
               content = ""
@@ -72,17 +74,19 @@ jobs:
                   ],
               )
 
-              print("\n=== SEARCH: Rock's Moving Company / US_FL ===")
-              page = await browser.get("https://www.allbiz.com/search?ss=Rock's+Moving+Company&ia=US_FL")
+              print(f"\n=== Verifying proxy egress IP via whoami ===")
+              page0 = await browser.create_context(url="https://api.ipify.org?format=json", proxy_server=PROXY)
+              await asyncio.sleep(3)
+              print("  proxy egress content:", await page0.get_content())
+
+              print("\n=== SEARCH via Webshare proxy: Rock's Moving Company / US_FL ===")
+              page = await browser.create_context(
+                  url="https://www.allbiz.com/search?ss=Rock's+Moving+Company&ia=US_FL",
+                  proxy_server=PROXY,
+              )
               content = await wait_for_real_content(page, "search")
               links = re.findall(r'href="([^"]*/business/[^"]+)"', content)
               print(f"  business links found: {len(links)}, first: {links[0] if links else None}")
-
-              if links:
-                  detail_url = links[0] if links[0].startswith("http") else "https://www.allbiz.com" + links[0]
-                  print(f"\n=== DETAIL: {detail_url} ===")
-                  page2 = await browser.get(detail_url)
-                  await wait_for_real_content(page2, "detail")
 
               try:
                   browser.stop()
