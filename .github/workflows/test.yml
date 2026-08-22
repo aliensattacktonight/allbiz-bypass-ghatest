@@ -40,18 +40,22 @@ jobs:
 
           async def wait_for_real_content(page, label):
               content = ""
-              for i in range(6):
+              for i in range(12):
                   await asyncio.sleep(5)
                   content = await page.get_content()
                   has_rows = "res-bname" in content
                   has_ldjson = 'application/ld+json' in content
-                  has_challenge = "Quick security check" in content
+                  has_challenge = (
+                      "Quick security check" in content
+                      or "Just a moment" in content
+                      or "challenge-platform" in content
+                  )
                   has_hardblock = "Sorry, you have been blocked" in content
                   title_m = re.search(r"<title>(.*?)</title>", content)
                   print(f"  [{label} t={5*(i+1)}s] len={len(content)} title={title_m.group(1) if title_m else None!r} rows={has_rows} ld_json={has_ldjson} challenge={has_challenge} hardblock={has_hardblock}")
                   if has_rows or has_hardblock or has_ldjson:
                       break
-                  if not has_challenge and i >= 1:
+                  if not has_challenge and i >= 2:
                       break
               return content
 
