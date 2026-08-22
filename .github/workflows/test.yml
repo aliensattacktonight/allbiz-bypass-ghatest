@@ -43,7 +43,7 @@ jobs:
                       return
 
           async def main():
-              browser = await uc.start(headless=False, sandbox=False, browser_args=["--window-size=1280,900"])
+              browser = await uc.start(headless=False, no_sandbox=True, browser_args=["--window-size=1280,900"])
               for ss, ia in QUERIES:
                   print(f"\n=== {ss} / {ia} ===")
                   await check_one(browser, ss, ia)
