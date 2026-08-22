@@ -51,6 +51,8 @@ jobs:
         run: |
           cat > test_bypass.py << 'PYEOF'
           import asyncio
+          import logging
+          logging.basicConfig(level=logging.DEBUG)
           import nodriver as uc
 
           QUERIES = [
