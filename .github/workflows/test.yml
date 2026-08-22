@@ -1,0 +1,59 @@
+name: allbiz-bypass-test
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Xvfb and deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb
+          pip install nodriver requests
+
+      - name: Show runner egress IP
+        run: |
+          python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
+
+      - name: Run headed-browser bypass test via Xvfb
+        run: |
+          cat > test_bypass.py << 'PYEOF'
+          import asyncio
+          import nodriver as uc
+
+          QUERIES = [
+              ("Driftwood Coastal Realty", "US_ME"),
+              ("Cobalt Precision Machining", "US_AZ"),
+          ]
+
+          async def check_one(browser, ss, ia):
+              url = f"https://www.allbiz.com/search?ss={ss.replace(' ', '+')}&ia={ia}"
+              page = await browser.get(url)
+              for i in range(6):
+                  await asyncio.sleep(5)
+                  content = await page.get_content()
+                  has_rows = "res-bname" in content
+                  has_challenge = "Quick security check" in content
+                  has_hardblock = "Sorry, you have been blocked" in content
+                  print(f"  [t={5*(i+1)}s] len={len(content)} rows={has_rows} challenge={has_challenge} hardblock={has_hardblock}")
+                  if has_rows or has_hardblock:
+                      return
+                  if not has_challenge and i >= 1:
+                      return
+
+          async def main():
+              browser = await uc.start(headless=False, sandbox=False, browser_args=["--window-size=1280,900"])
+              for ss, ia in QUERIES:
+                  print(f"\n=== {ss} / {ia} ===")
+                  await check_one(browser, ss, ia)
+                  await asyncio.sleep(2)
+              try:
+                  browser.stop()
+              except Exception:
+                  pass
+
+          if __name__ == "__main__":
+              uc.loop().run_until_complete(main())
+          PYEOF
+          xvfb-run -a --server-args="-screen 0 1280x900x24" python3 test_bypass.py
