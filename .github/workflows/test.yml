@@ -16,6 +16,37 @@ jobs:
         run: |
           python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
 
+      - name: Diagnostics
+        run: |
+          which google-chrome-stable || true
+          which google-chrome || true
+          google-chrome --version || true
+          echo "shm:" && df -h /dev/shm || true
+
+      - name: Patch nodriver's connect-retry window (2.5s is too short for cold CI start)
+        run: |
+          PKG=$(python3 -c "import nodriver, os; print(os.path.dirname(nodriver.__file__))")
+          FILE="$PKG/core/browser.py"
+          python3 - "$FILE" << 'PYEOF'
+          import sys
+          path = sys.argv[1]
+          with open(path) as f:
+              content = f.read()
+          content = content.replace("for _ in range(5):", "for _ in range(40):")
+          content = content.replace('if _ == 4:', 'if _ == 39:')
+          content = content.replace("await asyncio.sleep(0.5)", "await asyncio.sleep(0.5)  # patched")
+          with open(path, "w") as f:
+              f.write(content)
+          print("patched:", path)
+          PYEOF
+
+      - name: Sanity check - can Chrome even launch under Xvfb
+        run: |
+          xvfb-run -a --server-args="-screen 0 1280x900x24" \
+            timeout 8 google-chrome --no-sandbox --disable-dev-shm-usage --disable-gpu \
+            --remote-debugging-port=9333 --user-data-dir=/tmp/chrome-sanity about:blank 2>&1 | head -50 || true
+          echo "--- exit code above is expected to be 124 (timeout) if it launched fine and just kept running ---"
+
       - name: Run headed-browser bypass test via Xvfb
         run: |
           cat > test_bypass.py << 'PYEOF'
@@ -43,7 +74,16 @@ jobs:
                       return
 
           async def main():
-              browser = await uc.start(headless=False, no_sandbox=True, browser_args=["--window-size=1280,900"])
+              browser = await uc.start(
+                  headless=False,
+                  no_sandbox=True,
+                  browser_args=[
+                      "--window-size=1280,900",
+                      "--disable-dev-shm-usage",
+                      "--disable-gpu",
+                      "--remote-allow-origins=*",
+                  ],
+              )
               for ss, ia in QUERIES:
                   print(f"\n=== {ss} / {ia} ===")
                   await check_one(browser, ss, ia)
