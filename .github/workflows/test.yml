@@ -16,64 +16,29 @@ jobs:
         run: |
           python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
 
-      - name: Diagnostics
-        run: |
-          which google-chrome-stable || true
-          which google-chrome || true
-          google-chrome --version || true
-          echo "shm:" && df -h /dev/shm || true
-
-      - name: Patch nodriver's connect-retry window (2.5s is too short for cold CI start)
-        run: |
-          PKG=$(python3 -c "import nodriver, os; print(os.path.dirname(nodriver.__file__))")
-          FILE="$PKG/core/browser.py"
-          python3 - "$FILE" << 'PYEOF'
-          import sys
-          path = sys.argv[1]
-          with open(path) as f:
-              content = f.read()
-          content = content.replace("for _ in range(5):", "for _ in range(40):")
-          content = content.replace('if _ == 4:', 'if _ == 39:')
-          content = content.replace("await asyncio.sleep(0.5)", "await asyncio.sleep(0.5)  # patched")
-          with open(path, "w") as f:
-              f.write(content)
-          print("patched:", path)
-          PYEOF
-
-      - name: Sanity check - can Chrome even launch under Xvfb
-        run: |
-          xvfb-run -a --server-args="-screen 0 1280x900x24" \
-            timeout 8 google-chrome --no-sandbox --disable-dev-shm-usage --disable-gpu \
-            --remote-debugging-port=9333 --user-data-dir=/tmp/chrome-sanity about:blank 2>&1 | head -50 || true
-          echo "--- exit code above is expected to be 124 (timeout) if it launched fine and just kept running ---"
-
-      - name: Run headed-browser bypass test via Xvfb
+      - name: Run headed-browser bypass test via Xvfb (search + detail page)
         run: |
           cat > test_bypass.py << 'PYEOF'
           import asyncio
-          import logging
-          logging.basicConfig(level=logging.DEBUG)
+          import re
           import nodriver as uc
 
-          QUERIES = [
-              ("Driftwood Coastal Realty", "US_ME"),
-              ("Cobalt Precision Machining", "US_AZ"),
-          ]
-
-          async def check_one(browser, ss, ia):
-              url = f"https://www.allbiz.com/search?ss={ss.replace(' ', '+')}&ia={ia}"
-              page = await browser.get(url)
+          async def wait_for_real_content(page, label):
+              content = ""
               for i in range(6):
                   await asyncio.sleep(5)
                   content = await page.get_content()
                   has_rows = "res-bname" in content
+                  has_ldjson = 'application/ld+json' in content
                   has_challenge = "Quick security check" in content
                   has_hardblock = "Sorry, you have been blocked" in content
-                  print(f"  [t={5*(i+1)}s] len={len(content)} rows={has_rows} challenge={has_challenge} hardblock={has_hardblock}")
-                  if has_rows or has_hardblock:
-                      return
+                  title_m = re.search(r"<title>(.*?)</title>", content)
+                  print(f"  [{label} t={5*(i+1)}s] len={len(content)} title={title_m.group(1) if title_m else None!r} rows={has_rows} ld_json={has_ldjson} challenge={has_challenge} hardblock={has_hardblock}")
+                  if has_rows or has_hardblock or has_ldjson:
+                      break
                   if not has_challenge and i >= 1:
-                      return
+                      break
+              return content
 
           async def main():
               browser = await uc.start(
@@ -87,10 +52,19 @@ jobs:
                       "--remote-allow-origins=*",
                   ],
               )
-              for ss, ia in QUERIES:
-                  print(f"\n=== {ss} / {ia} ===")
-                  await check_one(browser, ss, ia)
-                  await asyncio.sleep(2)
+
+              print("\n=== SEARCH: Rock's Moving Company / US_FL ===")
+              page = await browser.get("https://www.allbiz.com/search?ss=Rock's+Moving+Company&ia=US_FL")
+              content = await wait_for_real_content(page, "search")
+              links = re.findall(r'href="([^"]*/business/[^"]+)"', content)
+              print(f"  business links found: {len(links)}, first: {links[0] if links else None}")
+
+              if links:
+                  detail_url = links[0] if links[0].startswith("http") else "https://www.allbiz.com" + links[0]
+                  print(f"\n=== DETAIL: {detail_url} ===")
+                  page2 = await browser.get(detail_url)
+                  await wait_for_real_content(page2, "detail")
+
               try:
                   browser.stop()
               except Exception:
