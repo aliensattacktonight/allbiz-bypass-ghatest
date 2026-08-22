@@ -16,6 +16,21 @@ jobs:
         run: |
           python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
 
+      - name: Patch nodriver's connect-retry window (2.5s is too short for cold CI start)
+        run: |
+          PKG=$(python3 -c "import nodriver, os; print(os.path.dirname(nodriver.__file__))")
+          FILE="$PKG/core/browser.py"
+          python3 -c "
+          path = '$FILE'
+          with open(path) as f:
+              content = f.read()
+          content = content.replace('for _ in range(5):', 'for _ in range(40):')
+          content = content.replace('if _ == 4:', 'if _ == 39:')
+          with open(path, 'w') as f:
+              f.write(content)
+          print('patched:', path)
+          "
+
       - name: Run headed-browser bypass test via Xvfb (search + detail page)
         run: |
           cat > test_bypass.py << 'PYEOF'
