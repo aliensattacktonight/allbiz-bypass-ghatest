@@ -39,6 +39,7 @@ jobs:
   reused-browser:
     runs-on: ubuntu-latest
     needs: fresh-browser
+    if: always()
     steps:
       - uses: actions/checkout@v4
 
