@@ -1,0 +1,12 @@
+# business name|state code, one per line. Mix of confirmed-real listings
+# (won't return zero results, so failures here are the transport's fault)
+# and fresh/unverified ones (a zero-result page is a legitimate, distinguishable
+# outcome, not a transport failure -- see pydoll_test.py's classify()).
+Rock's Moving Company|US_FL
+American Textile & Apparel|US_FL
+American Apparel|US_FL
+American First Apparel, LLC|US_FL
+American Apparel, LLC|US_FL
+Hazelwood Machine Shop|US_NE
+Everlast Custom Woodworking|US_VT
+Cascade Ridge Bakery|US_OR
