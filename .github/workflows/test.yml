@@ -18,9 +18,10 @@ jobs:
         run: |
           python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
 
-      - name: Run pydoll test on raw Azure/GitHub Actions IP (no proxy)
+      - name: Run pydoll test on GitHub Actions THROUGH the Webshare proxy (clean comparison)
         run: |
           xvfb-run -a --server-args="-screen 0 1280x900x24" python3 pydoll_test.py \
+            --proxy "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361" \
             --ss "Rock's Moving Company" --ia US_FL \
             --no-sandbox --captcha-wait 45 --challenge-wait 60 --debug
         working-directory: .
