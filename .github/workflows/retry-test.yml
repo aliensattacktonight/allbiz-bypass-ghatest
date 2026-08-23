@@ -1,0 +1,63 @@
+name: allbiz-retry-pool-test
+on:
+  workflow_dispatch:
+    inputs:
+      lookups:
+        description: "Number of lookups"
+        default: "8"
+      max_attempts:
+        description: "Max proxy attempts per lookup"
+        default: "4"
+
+permissions:
+  contents: write
+
+jobs:
+  retry-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Xvfb and deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb
+          pip install pydoll-python beautifulsoup4 requests
+
+      - name: Show runner egress IP
+        run: |
+          python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
+
+      - name: Show proxy pool health as restored from the repo (proves persistence)
+        run: |
+          if [ -f proxy_health.json ]; then
+            echo "--- proxy_health.json as checked out ---"
+            cat proxy_health.json
+          else
+            echo "no proxy_health.json yet -- this is the first run"
+          fi
+
+      - name: Retry-across-pool reliability test
+        run: |
+          xvfb-run -a --server-args="-screen 0 1280x900x24" python3 pydoll_retry_test.py "${{ github.event.inputs.lookups }}" \
+            --max-attempts "${{ github.event.inputs.max_attempts }}" \
+            --proxy-file webshare_proxies.txt --cases cases.txt \
+            --state-file proxy_health.json \
+            --no-sandbox --captcha-wait 45 --challenge-wait 60 --gap 6 --retry-gap 8
+
+      - name: Persist proxy health state back to the repo
+        if: always()
+        run: |
+          git config user.name "allbiz-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add proxy_health.json
+          git diff --cached --quiet || git commit -m "update proxy health state"
+          git push || echo "nothing to push"
+
+      - name: Upload saved pages (incl. any failures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retry-test-pages-${{ github.run_id }}
+          path: pydoll_*.html
+          if-no-files-found: ignore
