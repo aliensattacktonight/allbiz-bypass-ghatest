@@ -4,7 +4,7 @@ on:
     inputs:
       lookups:
         description: "Number of lookups"
-        default: "8"
+        default: "10"
       max_attempts:
         description: "Max proxy attempts per lookup"
         default: "4"
@@ -37,12 +37,12 @@ jobs:
             echo "no proxy_health.json yet -- this is the first run"
           fi
 
-      - name: Retry-across-pool reliability test
+      - name: Full-system reliability test (retry + pool health + persistent sessions)
         run: |
           xvfb-run -a --server-args="-screen 0 1280x900x24" python3 pydoll_retry_test.py "${{ github.event.inputs.lookups }}" \
             --max-attempts "${{ github.event.inputs.max_attempts }}" \
             --proxy-file webshare_proxies.txt --cases cases.txt \
-            --state-file proxy_health.json \
+            --state-file proxy_health.json --profile-dir chrome_profiles \
             --no-sandbox --captcha-wait 45 --challenge-wait 60 --gap 6 --retry-gap 8
 
       - name: Persist proxy health state back to the repo
