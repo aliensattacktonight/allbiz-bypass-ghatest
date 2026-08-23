@@ -349,6 +349,7 @@ def build_options(args):
     Chrome is already running" trap does not apply here.
     """
     options = ChromiumOptions()
+    options.start_timeout = 40  # CI cold-start patch: default 10s is too short
 
     if args.binary:
         options.binary_location = args.binary
