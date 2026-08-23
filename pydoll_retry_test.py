@@ -97,13 +97,50 @@ class BrowserPool:
     lookup that picks the same proxy -- see module docstring #3.
     """
 
-    def __init__(self, args):
+    def __init__(self, args, max_concurrent=4):
         self.args = args
-        self._entries = {}  # proxy_url -> {"browser": Chrome, "tab": Tab}
+        # Bounds how many live Chrome instances this pool holds open at
+        # once. Without this, a rough patch where lookup after lookup
+        # fails and retries onto a NEW proxy each time accumulates one
+        # live browser per distinct proxy tried -- observed directly: a
+        # single local run ballooned to 128 chrome.exe processes and every
+        # subsequent launch started timing out from resource starvation,
+        # which then LOOKED like a Cloudflare failure but was actually us
+        # running out of memory/handles. LRU eviction keeps at most
+        # `max_concurrent` sessions alive; the rest get closed and
+        # relaunched fresh if picked again later.
+        self.max_concurrent = max_concurrent
+        self._entries = {}  # proxy_url -> {"browser": Chrome, "tab": Tab, "last_used": float}
+
+    async def _kill_orphan(self, browser):
+        """Best-effort hard-kill of the OS process behind a Chrome object
+        that failed partway through start() -- e.g. the process spawned
+        but the CDP WebSocket handshake never completed. Without this,
+        that process is never tracked in self._entries (start() never
+        returned) so discard() has nothing to clean up, and it leaks for
+        the rest of the run. Confirmed directly: this exact scenario is
+        what produced the 128-process pileup."""
+        proc = getattr(browser, "_process", None)
+        if proc is not None:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+
+    async def _evict_lru(self):
+        """Close the least-recently-used session to stay within
+        max_concurrent. Only called right before opening a new one."""
+        if len(self._entries) < self.max_concurrent:
+            return
+        lru_url = min(self._entries, key=lambda u: self._entries[u]["last_used"])
+        print(f"    [pool] at capacity ({self.max_concurrent}) -- closing LRU session "
+              f"{P.redact(lru_url)} to make room")
+        await self.discard(lru_url)
 
     async def get_tab(self, proxy_url):
         entry = self._entries.get(proxy_url)
         if entry is not None:
+            entry["last_used"] = time.time()
             return entry["tab"]
 
         chrome_proxy, forwarder = P.split_proxy(proxy_url)
@@ -116,6 +153,8 @@ class BrowserPool:
                 "(needs a kept-alive SOCKS5Forwarder per proxy, not just per attempt)"
             )
 
+        await self._evict_lru()
+
         options = P.build_options(self.args)
         if self.args.profile_dir:
             options.add_argument(f"--user-data-dir={profile_dir_for(proxy_url, self.args.profile_dir)}")
@@ -125,24 +164,28 @@ class BrowserPool:
             options.add_argument(f"--proxy-server={chrome_proxy}")
 
         browser = Chrome(options=options)
-        tab = await browser.start()
-        applied = await apply_geo(tab, proxy_url)
-        await tab.enable_auto_solve_cloudflare_captcha(time_to_wait_captcha=self.args.captcha_wait)
+        try:
+            tab = await browser.start()
+            applied = await apply_geo(tab, proxy_url)
+            await tab.enable_auto_solve_cloudflare_captcha(time_to_wait_captcha=self.args.captcha_wait)
+        except Exception:
+            await self._kill_orphan(browser)
+            raise
         print(f"    [pool] launched persistent session for {P.redact(proxy_url)} "
-              f"({applied['city']}, {applied['country']})")
-        self._entries[proxy_url] = {"browser": browser, "tab": tab}
+              f"({applied['city']}, {applied['country']}) -- {len(self._entries) + 1}/{self.max_concurrent} slots used")
+        self._entries[proxy_url] = {"browser": browser, "tab": tab, "last_used": time.time()}
         return tab
 
     async def discard(self, proxy_url):
-        """Drop a proxy's session (e.g. after a crash) so the next
-        get_tab() call for it launches fresh instead of reusing a dead
-        browser."""
+        """Drop a proxy's session (e.g. after a crash, or LRU eviction) so
+        the next get_tab() call for it launches fresh instead of reusing a
+        dead browser."""
         entry = self._entries.pop(proxy_url, None)
         if entry is not None:
             try:
                 await entry["browser"].stop()
             except Exception:
-                pass
+                await self._kill_orphan(entry["browser"])
 
     async def close_all(self):
         for proxy_url in list(self._entries.keys()):
@@ -200,7 +243,7 @@ async def main_async(args):
     cases = R.load_cases(args.cases) if args.cases else [R.DEFAULT_CASE]
     proxies = P.load_proxies(args.proxy_file)
     pool = ProxyPool(proxies, state_path=args.state_file)
-    browser_pool = BrowserPool(args)
+    browser_pool = BrowserPool(args, max_concurrent=args.max_concurrent_browsers)
 
     print("=" * 78)
     print(f"Full-system test -- {args.lookups} lookups, up to {args.max_attempts} "
@@ -263,6 +306,10 @@ def parse_args(argv):
     p.add_argument("--proxy-file", required=True, help="File of proxy URLs (required).")
     p.add_argument("--state-file", default="proxy_health.json",
                    help="Where per-proxy health persists across runs (default proxy_health.json).")
+    p.add_argument("--max-concurrent-browsers", type=int, default=4,
+                   help="Cap on simultaneously-live persistent browser sessions (LRU-evicted "
+                        "beyond this). Prevents a bad patch from ballooning into dozens of live "
+                        "Chrome processes -- default 4.")
     p.add_argument("--profile-dir", default=None,
                    help="Base directory for per-proxy on-disk Chrome profiles (fallback if a "
                         "session is relaunched mid-run). Omit for temp profiles.")
