@@ -1,20 +1,67 @@
-name: allbiz-single-test
+name: allbiz-bypass-test
 on:
   workflow_dispatch:
 
 jobs:
-  single:
+  fresh-browser-pool:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install deps
+
+      - name: Install Xvfb and deps
         run: |
           sudo apt-get update -y
           sudo apt-get install -y xvfb
           pip install pydoll-python beautifulsoup4 requests
-      - name: Single lookup through Webshare proxy, right now
+
+      - name: Show runner egress IP
         run: |
-          xvfb-run -a --server-args="-screen 0 1280x900x24" python3 pydoll_test.py \
-            --proxy "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361" \
-            --ss "Rock's Moving Company" --ia US_FL \
-            --no-sandbox --captcha-wait 45 --challenge-wait 60
+          python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
+
+      - name: Reliability test -- FRESH browser per lookup, rotating the full 10-proxy pool
+        run: |
+          xvfb-run -a --server-args="-screen 0 1280x900x24" python3 pydoll_reliability_test.py 10 \
+            --proxy-file webshare_proxies.txt \
+            --cases cases.txt \
+            --no-sandbox --captcha-wait 45 --challenge-wait 60 --gap 6
+
+      - name: Upload saved pages (search/detail HTML, incl. any failures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-browser-pool-pages
+          path: pydoll_rel_*.html
+          if-no-files-found: ignore
+
+  reused-browser-pool:
+    runs-on: ubuntu-latest
+    needs: fresh-browser-pool
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Xvfb and deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb
+          pip install pydoll-python beautifulsoup4 requests
+
+      - name: Show runner egress IP
+        run: |
+          python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
+
+      - name: Reliability test -- ONE reused browser (proxy-file uses only the first entry when reusing)
+        run: |
+          xvfb-run -a --server-args="-screen 0 1280x900x24" python3 pydoll_reliability_test.py 8 \
+            --reuse-browser \
+            --proxy-file webshare_proxies.txt \
+            --cases cases.txt \
+            --no-sandbox --captcha-wait 45 --challenge-wait 60 --gap 6
+
+      - name: Upload saved pages (search/detail HTML, incl. any failures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reused-browser-pool-pages
+          path: pydoll_rel_*.html
+          if-no-files-found: ignore
