@@ -1,92 +1,92 @@
 {
   "http://flrshtcq:do1x444yjtkh@31.59.20.176:6754": {
     "url": "http://flrshtcq:do1x444yjtkh@31.59.20.176:6754",
-    "consecutive_failures": 3,
+    "consecutive_failures": 4,
     "total_success": 0,
-    "total_failure": 3,
-    "last_used_ts": 1787491789.4024386,
-    "last_result_ts": 1787491854.301755,
-    "cooldown_until_ts": 1787495454.3017578
+    "total_failure": 4,
+    "last_used_ts": 1787495810.5613198,
+    "last_result_ts": 1787495873.5732367,
+    "cooldown_until_ts": 1787503073.5732388
   },
   "http://flrshtcq:do1x444yjtkh@31.56.127.193:7684": {
     "url": "http://flrshtcq:do1x444yjtkh@31.56.127.193:7684",
-    "consecutive_failures": 3,
+    "consecutive_failures": 4,
     "total_success": 0,
-    "total_failure": 3,
-    "last_used_ts": 1787491862.3101366,
-    "last_result_ts": 1787491925.1231112,
-    "cooldown_until_ts": 1787495525.1231134
+    "total_failure": 4,
+    "last_used_ts": 1787495881.5750515,
+    "last_result_ts": 1787495943.2459874,
+    "cooldown_until_ts": 1787503143.2459896
   },
   "http://flrshtcq:do1x444yjtkh@45.38.107.97:6014": {
     "url": "http://flrshtcq:do1x444yjtkh@45.38.107.97:6014",
-    "consecutive_failures": 3,
+    "consecutive_failures": 4,
     "total_success": 0,
-    "total_failure": 3,
-    "last_used_ts": 1787491931.129514,
-    "last_result_ts": 1787491995.6496608,
-    "cooldown_until_ts": 1787495595.6496632
+    "total_failure": 4,
+    "last_used_ts": 1787495949.2469182,
+    "last_result_ts": 1787496058.4331722,
+    "cooldown_until_ts": 1787503258.4331744
   },
   "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462": {
     "url": "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462",
-    "consecutive_failures": 2,
+    "consecutive_failures": 4,
     "total_success": 2,
-    "total_failure": 2,
-    "last_used_ts": 1787476954.966119,
-    "last_result_ts": 1787477007.7745533,
-    "cooldown_until_ts": 1787478807.7745552
+    "total_failure": 4,
+    "last_used_ts": 1787496470.6306145,
+    "last_result_ts": 1787496523.1921923,
+    "cooldown_until_ts": 1787503723.1921947
   },
   "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641": {
     "url": "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641",
-    "consecutive_failures": 3,
+    "consecutive_failures": 4,
     "total_success": 0,
-    "total_failure": 3,
-    "last_used_ts": 1787492003.6511915,
-    "last_result_ts": 1787492066.190041,
-    "cooldown_until_ts": 1787495666.1900535
+    "total_failure": 4,
+    "last_used_ts": 1787496066.434053,
+    "last_result_ts": 1787496129.7570024,
+    "cooldown_until_ts": 1787503329.7570043
   },
   "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361": {
     "url": "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361",
-    "consecutive_failures": 3,
+    "consecutive_failures": 4,
     "total_success": 0,
-    "total_failure": 3,
-    "last_used_ts": 1787492074.1984222,
-    "last_result_ts": 1787492137.283315,
-    "cooldown_until_ts": 1787495737.2833169
+    "total_failure": 4,
+    "last_used_ts": 1787496137.758991,
+    "last_result_ts": 1787496200.5517066,
+    "cooldown_until_ts": 1787503400.5517085
   },
   "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370": {
     "url": "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370",
-    "consecutive_failures": 3,
+    "consecutive_failures": 4,
     "total_success": 0,
-    "total_failure": 3,
-    "last_used_ts": 1787492143.289719,
-    "last_result_ts": 1787492206.1384115,
-    "cooldown_until_ts": 1787495806.1384137
+    "total_failure": 4,
+    "last_used_ts": 1787496208.5530221,
+    "last_result_ts": 1787496270.333016,
+    "cooldown_until_ts": 1787503470.333018
   },
   "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095": {
     "url": "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095",
-    "consecutive_failures": 1,
-    "total_success": 4,
-    "total_failure": 2,
-    "last_used_ts": 1787491705.8936875,
-    "last_result_ts": 1787491781.3940156,
-    "cooldown_until_ts": 1787492681.3940187
+    "consecutive_failures": 2,
+    "total_success": 9,
+    "total_failure": 4,
+    "last_used_ts": 1787496409.669322,
+    "last_result_ts": 1787496462.6288028,
+    "cooldown_until_ts": 1787498262.6288052
   },
   "http://flrshtcq:do1x444yjtkh@142.111.67.146:5611": {
     "url": "http://flrshtcq:do1x444yjtkh@142.111.67.146:5611",
-    "consecutive_failures": 3,
+    "consecutive_failures": 4,
     "total_success": 0,
-    "total_failure": 3,
-    "last_used_ts": 1787492214.1468024,
-    "last_result_ts": 1787492278.3838441,
-    "cooldown_until_ts": 1787495878.3838463
+    "total_failure": 4,
+    "last_used_ts": 1787496276.3338792,
+    "last_result_ts": 1787496341.104057,
+    "cooldown_until_ts": 1787503541.104059
   },
   "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185": {
     "url": "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185",
     "consecutive_failures": 0,
-    "total_success": 4,
-    "total_failure": 2,
-    "last_used_ts": 1787492316.8133106,
-    "last_result_ts": 1787492325.2562237,
+    "total_success": 6,
+    "total_failure": 4,
+    "last_used_ts": 1787496539.4938061,
+    "last_result_ts": 1787496542.0616257,
     "cooldown_until_ts": 0.0
   }
 }
