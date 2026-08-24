@@ -51,6 +51,16 @@ COOLDOWN_BASE_SECONDS = 15 * 60
 COOLDOWN_MAX_SECONDS = 4 * 60 * 60
 BACKOFF_MULTIPLIER = 2
 
+# A proxy with a strong track record gets one mulligan: its first failure
+# alone won't bench it. Measured directly (2026-08-24 batched GH Actions run)
+# -- a proxy with succ=15 hit one "zero listings" soft-block, a single
+# failure put it on a 15min cooldown per the old policy, and every other
+# proxy in the pool had 0 lifetime successes, so that one cooldown forced
+# the very next lookup onto a proxy that had never once worked. Proven
+# proxies deserve a second consecutive failure before losing their slot.
+GRACE_SUCCESS_THRESHOLD = 3
+GRACE_FAILURES_BEFORE_COOLDOWN = 2
+
 
 @dataclass
 class ProxyState:
@@ -68,6 +78,11 @@ class ProxyState:
     def redacted(self):
         p = urlparse(self.url)
         return f"{p.hostname}:{p.port}"
+
+
+def _success_rate(st):
+    total = st.total_success + st.total_failure
+    return st.total_success / total if total else 0.0
 
 
 class ProxyPool:
@@ -105,7 +120,14 @@ class ProxyPool:
         available = [s for s in candidates if not s.is_cooling_down(now)]
         pool = available if available else candidates
         if available:
-            pool.sort(key=lambda s: (s.consecutive_failures, s.last_used_ts))
+            # Lifetime success rate first -- a proxy with a real track record
+            # should always be preferred over one that has never once worked,
+            # even when both currently show the same failure streak (e.g.
+            # both just came off cooldown at streak=0/idle=similar). Streak
+            # and idle-time remain as tiebreakers among proxies with the same
+            # rate (this is what still spreads load across equally-good or
+            # equally-untested proxies).
+            pool.sort(key=lambda s: (-_success_rate(s), s.consecutive_failures, s.last_used_ts))
         else:
             # Everyone's resting -- pick whoever's closest to being ready.
             pool.sort(key=lambda s: s.cooldown_until_ts)
@@ -126,6 +148,14 @@ class ProxyPool:
         st.consecutive_failures += 1
         st.total_failure += 1
         st.last_result_ts = time.time()
+
+        proven = st.total_success >= GRACE_SUCCESS_THRESHOLD
+        if proven and st.consecutive_failures < GRACE_FAILURES_BEFORE_COOLDOWN:
+            # one bad roll on an otherwise-reliable proxy doesn't cost it its slot
+            st.cooldown_until_ts = 0.0
+            self.save()
+            return
+
         backoff = min(
             COOLDOWN_BASE_SECONDS * (BACKOFF_MULTIPLIER ** (st.consecutive_failures - 1)),
             COOLDOWN_MAX_SECONDS,
