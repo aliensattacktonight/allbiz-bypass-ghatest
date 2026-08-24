@@ -70,7 +70,7 @@ jobs:
               --proxy-file webshare_proxies.txt --cases cases.txt \
               --state-file proxy_health.json --profile-dir "chrome_profiles_batch${batch_num}" \
               --no-sandbox --captcha-wait 45 --challenge-wait 60 --gap 6 --retry-gap 8 \
-              > "$BATCH_LOG" 2>&1
+              > "$BATCH_LOG" 2>&1 || true
             cat "$BATCH_LOG" >> "$COMBINED_LOG"
 
             line=$(grep "Success rate" "$BATCH_LOG" | tail -1)
