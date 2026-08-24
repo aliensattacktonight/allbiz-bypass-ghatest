@@ -1,48 +1,48 @@
 {
   "http://flrshtcq:do1x444yjtkh@31.59.20.176:6754": {
     "url": "http://flrshtcq:do1x444yjtkh@31.59.20.176:6754",
-    "consecutive_failures": 9,
+    "consecutive_failures": 10,
     "total_success": 0,
-    "total_failure": 9,
-    "last_used_ts": 1787546167.4180048,
-    "last_result_ts": 1787546230.3613608,
-    "cooldown_until_ts": 1787560630.3613627
+    "total_failure": 10,
+    "last_used_ts": 1787548413.5734231,
+    "last_result_ts": 1787548473.7333636,
+    "cooldown_until_ts": 1787562873.7333663
   },
   "http://flrshtcq:do1x444yjtkh@31.56.127.193:7684": {
     "url": "http://flrshtcq:do1x444yjtkh@31.56.127.193:7684",
-    "consecutive_failures": 9,
+    "consecutive_failures": 10,
     "total_success": 0,
-    "total_failure": 9,
-    "last_used_ts": 1787546238.369221,
-    "last_result_ts": 1787546299.9986215,
-    "cooldown_until_ts": 1787560699.9986234
+    "total_failure": 10,
+    "last_used_ts": 1787548481.7374053,
+    "last_result_ts": 1787548544.396238,
+    "cooldown_until_ts": 1787562944.3962402
   },
   "http://flrshtcq:do1x444yjtkh@45.38.107.97:6014": {
     "url": "http://flrshtcq:do1x444yjtkh@45.38.107.97:6014",
-    "consecutive_failures": 9,
+    "consecutive_failures": 10,
     "total_success": 0,
-    "total_failure": 9,
-    "last_used_ts": 1787546301.2493467,
-    "last_result_ts": 1787546364.368145,
-    "cooldown_until_ts": 1787560764.3681474
+    "total_failure": 10,
+    "last_used_ts": 1787548621.895224,
+    "last_result_ts": 1787548685.9628468,
+    "cooldown_until_ts": 1787563085.9628487
   },
   "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462": {
     "url": "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462",
-    "consecutive_failures": 4,
-    "total_success": 13,
-    "total_failure": 18,
-    "last_used_ts": 1787546616.3062322,
-    "last_result_ts": 1787546661.7592385,
-    "cooldown_until_ts": 1787553861.7592406
+    "consecutive_failures": 0,
+    "total_success": 16,
+    "total_failure": 21,
+    "last_used_ts": 1787548849.4008613,
+    "last_result_ts": 1787548851.2238874,
+    "cooldown_until_ts": 0.0
   },
   "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641": {
     "url": "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641",
-    "consecutive_failures": 9,
+    "consecutive_failures": 10,
     "total_success": 0,
-    "total_failure": 9,
-    "last_used_ts": 1787546372.3720427,
-    "last_result_ts": 1787546435.6415534,
-    "cooldown_until_ts": 1787560835.6415565
+    "total_failure": 10,
+    "last_used_ts": 1787548693.963918,
+    "last_result_ts": 1787548758.1582205,
+    "cooldown_until_ts": 1787563158.1582227
   },
   "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361": {
     "url": "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361",
@@ -55,30 +55,30 @@
   },
   "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370": {
     "url": "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370",
-    "consecutive_failures": 8,
+    "consecutive_failures": 9,
     "total_success": 0,
-    "total_failure": 8,
-    "last_used_ts": 1787545186.7695546,
-    "last_result_ts": 1787545249.1736517,
-    "cooldown_until_ts": 1787559649.173654
+    "total_failure": 9,
+    "last_used_ts": 1787548155.4147909,
+    "last_result_ts": 1787548217.9160051,
+    "cooldown_until_ts": 1787562617.9160087
   },
   "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095": {
     "url": "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095",
-    "consecutive_failures": 0,
-    "total_success": 17,
-    "total_failure": 14,
-    "last_used_ts": 1787546810.4258173,
-    "last_result_ts": 1787546812.3601613,
-    "cooldown_until_ts": 0.0
+    "consecutive_failures": 4,
+    "total_success": 21,
+    "total_failure": 19,
+    "last_used_ts": 1787548759.271725,
+    "last_result_ts": 1787548823.6240075,
+    "cooldown_until_ts": 1787556023.6240108
   },
   "http://flrshtcq:do1x444yjtkh@142.111.67.146:5611": {
     "url": "http://flrshtcq:do1x444yjtkh@142.111.67.146:5611",
-    "consecutive_failures": 8,
+    "consecutive_failures": 9,
     "total_success": 0,
-    "total_failure": 8,
-    "last_used_ts": 1787545257.1766768,
-    "last_result_ts": 1787545321.183719,
-    "cooldown_until_ts": 1787559721.1837213
+    "total_failure": 9,
+    "last_used_ts": 1787548225.9177487,
+    "last_result_ts": 1787548289.8956969,
+    "cooldown_until_ts": 1787562689.8957002
   },
   "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185": {
     "url": "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185",
