@@ -1,57 +1,57 @@
 {
   "http://flrshtcq:do1x444yjtkh@31.59.20.176:6754": {
     "url": "http://flrshtcq:do1x444yjtkh@31.59.20.176:6754",
-    "consecutive_failures": 8,
+    "consecutive_failures": 9,
     "total_success": 0,
-    "total_failure": 8,
-    "last_used_ts": 1787519215.6471114,
-    "last_result_ts": 1787519278.7329185,
-    "cooldown_until_ts": 1787533678.732921
+    "total_failure": 9,
+    "last_used_ts": 1787546167.4180048,
+    "last_result_ts": 1787546230.3613608,
+    "cooldown_until_ts": 1787560630.3613627
   },
   "http://flrshtcq:do1x444yjtkh@31.56.127.193:7684": {
     "url": "http://flrshtcq:do1x444yjtkh@31.56.127.193:7684",
-    "consecutive_failures": 8,
+    "consecutive_failures": 9,
     "total_success": 0,
-    "total_failure": 8,
-    "last_used_ts": 1787519286.7357712,
-    "last_result_ts": 1787519348.6109586,
-    "cooldown_until_ts": 1787533748.6109607
+    "total_failure": 9,
+    "last_used_ts": 1787546238.369221,
+    "last_result_ts": 1787546299.9986215,
+    "cooldown_until_ts": 1787560699.9986234
   },
   "http://flrshtcq:do1x444yjtkh@45.38.107.97:6014": {
     "url": "http://flrshtcq:do1x444yjtkh@45.38.107.97:6014",
-    "consecutive_failures": 8,
+    "consecutive_failures": 9,
     "total_success": 0,
-    "total_failure": 8,
-    "last_used_ts": 1787519356.6122484,
-    "last_result_ts": 1787519419.8678358,
-    "cooldown_until_ts": 1787533819.867838
+    "total_failure": 9,
+    "last_used_ts": 1787546301.2493467,
+    "last_result_ts": 1787546364.368145,
+    "cooldown_until_ts": 1787560764.3681474
   },
   "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462": {
     "url": "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462",
-    "consecutive_failures": 1,
+    "consecutive_failures": 4,
     "total_success": 13,
-    "total_failure": 15,
-    "last_used_ts": 1787545062.9596295,
-    "last_result_ts": 1787545108.4218886,
-    "cooldown_until_ts": 1787546008.421891
+    "total_failure": 18,
+    "last_used_ts": 1787546616.3062322,
+    "last_result_ts": 1787546661.7592385,
+    "cooldown_until_ts": 1787553861.7592406
   },
   "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641": {
     "url": "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641",
-    "consecutive_failures": 8,
+    "consecutive_failures": 9,
     "total_success": 0,
-    "total_failure": 8,
-    "last_used_ts": 1787519639.7258515,
-    "last_result_ts": 1787519702.9368753,
-    "cooldown_until_ts": 1787534102.9368773
+    "total_failure": 9,
+    "last_used_ts": 1787546372.3720427,
+    "last_result_ts": 1787546435.6415534,
+    "cooldown_until_ts": 1787560835.6415565
   },
   "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361": {
     "url": "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361",
-    "consecutive_failures": 8,
+    "consecutive_failures": 9,
     "total_success": 0,
-    "total_failure": 8,
-    "last_used_ts": 1787545116.4271996,
-    "last_result_ts": 1787545178.7627432,
-    "cooldown_until_ts": 1787559578.7627463
+    "total_failure": 9,
+    "last_used_ts": 1787546730.6305466,
+    "last_result_ts": 1787546793.6934822,
+    "cooldown_until_ts": 1787561193.6934843
   },
   "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370": {
     "url": "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370",
@@ -64,12 +64,12 @@
   },
   "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095": {
     "url": "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095",
-    "consecutive_failures": 7,
-    "total_success": 10,
-    "total_failure": 11,
-    "last_used_ts": 1787519497.1642995,
-    "last_result_ts": 1787519560.5935643,
-    "cooldown_until_ts": 1787533960.5935662
+    "consecutive_failures": 0,
+    "total_success": 17,
+    "total_failure": 14,
+    "last_used_ts": 1787546810.4258173,
+    "last_result_ts": 1787546812.3601613,
+    "cooldown_until_ts": 0.0
   },
   "http://flrshtcq:do1x444yjtkh@142.111.67.146:5611": {
     "url": "http://flrshtcq:do1x444yjtkh@142.111.67.146:5611",
@@ -82,11 +82,11 @@
   },
   "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185": {
     "url": "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185",
-    "consecutive_failures": 7,
+    "consecutive_failures": 8,
     "total_success": 7,
-    "total_failure": 15,
-    "last_used_ts": 1787544920.0245986,
-    "last_result_ts": 1787544995.1157637,
-    "cooldown_until_ts": 1787559395.1157665
+    "total_failure": 16,
+    "last_used_ts": 1787546669.7606978,
+    "last_result_ts": 1787546722.628603,
+    "cooldown_until_ts": 1787561122.628605
   }
 }
