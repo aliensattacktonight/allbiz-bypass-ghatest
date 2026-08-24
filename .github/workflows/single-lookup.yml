@@ -68,13 +68,7 @@ jobs:
           CALLBACK_TOKEN: ${{ secrets.CALLBACK_TOKEN }}
         run: |
           if [ ! -f result.json ]; then
-            echo '{"status":"error","error":"workflow crashed before writing a result"}' > result.json
-            python3 -c "
-import json
-d = json.load(open('result.json'))
-d['request_id'] = '${{ github.event.inputs.request_id }}'
-json.dump(d, open('result.json', 'w'))
-"
+            echo "{\"status\":\"error\",\"error\":\"workflow crashed before writing a result\",\"request_id\":\"${{ github.event.inputs.request_id }}\"}" > result.json
           fi
           cat result.json
           curl -sS -X POST "$CALLBACK_BASE_URL/callback/${{ github.event.inputs.request_id }}" \
