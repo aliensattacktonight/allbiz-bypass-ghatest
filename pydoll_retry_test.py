@@ -44,9 +44,40 @@ import argparse
 import asyncio
 import os
 import re
+import subprocess
 import sys
 import time
 from collections import Counter
+
+
+def kill_process_tree(pid):
+    """Kill a process AND all its descendants.
+
+    pydoll's own BrowserProcessManager.stop_process() only calls
+    terminate()/kill() on the single main Chrome process object it holds a
+    handle to. On Windows that does NOT cascade to the renderer/GPU/utility/
+    crashpad-handler processes Chrome's own multi-process architecture
+    spawns as separate OS processes -- confirmed directly: a run using only
+    that path went to 147 live chrome.exe processes and started crashing
+    with "Chrome is unresponsive" dialogs. This is the actual backstop:
+    called in addition to (not instead of) browser.stop(), so the full tree
+    dies regardless of whether pydoll's own graceful shutdown completed.
+    """
+    if not pid:
+        return
+    try:
+        if sys.platform == "win32":
+            subprocess.run(
+                ["taskkill", "/T", "/F", "/PID", str(pid)],
+                capture_output=True, timeout=10,
+            )
+        else:
+            # Linux CI runners: kill children first (pkill -P), then the
+            # parent itself, in case it's not already gone.
+            subprocess.run(["pkill", "-9", "-P", str(pid)], capture_output=True, timeout=10)
+            subprocess.run(["kill", "-9", str(pid)], capture_output=True, timeout=10)
+    except Exception:
+        pass
 
 try:
     import pydoll_test as P
@@ -112,20 +143,22 @@ class BrowserPool:
         self.max_concurrent = max_concurrent
         self._entries = {}  # proxy_url -> {"browser": Chrome, "tab": Tab, "last_used": float}
 
+    def _pid_of(self, browser):
+        """The real OS PID behind a Chrome object. Lives on the process
+        manager, not the Browser instance itself -- see
+        browser_process_manager.py: BrowserProcessManager._process.pid."""
+        mgr = getattr(browser, "_browser_process_manager", None)
+        proc = getattr(mgr, "_process", None) if mgr else None
+        return getattr(proc, "pid", None)
+
     async def _kill_orphan(self, browser):
-        """Best-effort hard-kill of the OS process behind a Chrome object
-        that failed partway through start() -- e.g. the process spawned
-        but the CDP WebSocket handshake never completed. Without this,
-        that process is never tracked in self._entries (start() never
-        returned) so discard() has nothing to clean up, and it leaks for
-        the rest of the run. Confirmed directly: this exact scenario is
-        what produced the 128-process pileup."""
-        proc = getattr(browser, "_process", None)
-        if proc is not None:
-            try:
-                proc.kill()
-            except Exception:
-                pass
+        """Hard-kill the FULL process tree behind a Chrome object -- not
+        just the main process (see kill_process_tree's docstring for why
+        that alone isn't enough). Covers both a browser that failed
+        partway through start() (never reached self._entries, so
+        discard() has nothing to find) and a normal close where pydoll's
+        own graceful shutdown didn't fully clean up its children."""
+        kill_process_tree(self._pid_of(browser))
 
     async def _evict_lru(self):
         """Close the least-recently-used session to stay within
@@ -179,13 +212,23 @@ class BrowserPool:
     async def discard(self, proxy_url):
         """Drop a proxy's session (e.g. after a crash, or LRU eviction) so
         the next get_tab() call for it launches fresh instead of reusing a
-        dead browser."""
+        dead browser.
+
+        Tree-kill runs UNCONDITIONALLY, after the graceful attempt --
+        not just as an except-branch fallback. browser.stop() can return
+        successfully while still leaving child renderer/GPU/utility
+        processes behind (it only confirms the MAIN process exited); the
+        only way to guarantee nothing survives is to always sweep the
+        tree by PID afterward.
+        """
         entry = self._entries.pop(proxy_url, None)
-        if entry is not None:
-            try:
-                await entry["browser"].stop()
-            except Exception:
-                await self._kill_orphan(entry["browser"])
+        if entry is None:
+            return
+        try:
+            await entry["browser"].stop()
+        except Exception:
+            pass
+        await self._kill_orphan(entry["browser"])
 
     async def close_all(self):
         for proxy_url in list(self._entries.keys()):
@@ -260,7 +303,7 @@ async def main_async(args):
     results = []
     try:
         for i in range(1, args.lookups + 1):
-            case = cases[(i - 1) % len(cases)]
+            case = cases[(args.case_offset + i - 1) % len(cases)]
             print(f"\n[{i}/{args.lookups}] {case['ss']!r} / {case['ia']}")
             r = await lookup_with_retry(args, pool, browser_pool, case, watcher, i)
             results.append(r)
@@ -314,6 +357,11 @@ def parse_args(argv):
                    help="Base directory for per-proxy on-disk Chrome profiles (fallback if a "
                         "session is relaunched mid-run). Omit for temp profiles.")
     p.add_argument("--cases", default=None, help="File of 'name|US_XX' lines to rotate through.")
+    p.add_argument("--case-offset", type=int, default=0,
+                   help="Start the case rotation at this index instead of 0. Lets a batched "
+                        "sequence of separate process invocations (see the long-running-process "
+                        "degradation this works around) continue through the case list instead "
+                        "of every batch restarting at case 0.")
     p.add_argument("--no-sandbox", action="store_true")
     p.add_argument("--binary", default=None)
     p.add_argument("--user-data-dir", default=None)
