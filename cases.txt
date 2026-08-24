@@ -1,12 +1,23 @@
-# business name|state code, one per line. Mix of confirmed-real listings
-# (won't return zero results, so failures here are the transport's fault)
-# and fresh/unverified ones (a zero-result page is a legitimate, distinguishable
-# outcome, not a transport failure -- see pydoll_test.py's classify()).
+# business name|state code, one per line. All 5 confirmed-real listings --
+# each has landed a genuine, non-empty result in at least one clean run, so a
+# failure here is always the transport's fault, never "this business doesn't
+# exist."
+#
+# 2026-08-24: this file used to also carry Hazelwood Machine Shop (US_NE),
+# Everlast Custom Woodworking (US_VT), and Cascade Ridge Bakery (US_OR) as
+# "fresh/unverified" cases meant to exercise classify()'s zero-listings path.
+# Checked directly: across 24 attempts each, spanning many proxies and many
+# days, every single attempt on all three came back either "zero listings" or
+# an unresolved challenge -- 0/24 successes each, with zero correlation to
+# which proxy carried the request. That is not intermittent bot-detection,
+# that is "no such listing." Since pydoll_retry_test.py's success-rate line
+# doesn't separate "no listing" from "transport failed" in its denominator,
+# these 3 were silently capping every run's ceiling at 7/10 regardless of how
+# good the retry/pool system actually was. Removed rather than kept as
+# negative controls -- if that distinction matters again later, it needs its
+# own reporting bucket, not a shared pass/fail count with the real cases.
 Rock's Moving Company|US_FL
 American Textile & Apparel|US_FL
 American Apparel|US_FL
 American First Apparel, LLC|US_FL
 American Apparel, LLC|US_FL
-Hazelwood Machine Shop|US_NE
-Everlast Custom Woodworking|US_VT
-Cascade Ridge Bakery|US_OR
