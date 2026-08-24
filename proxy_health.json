@@ -28,12 +28,12 @@
   },
   "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462": {
     "url": "http://flrshtcq:do1x444yjtkh@198.105.121.200:6462",
-    "consecutive_failures": 2,
+    "consecutive_failures": 3,
     "total_success": 17,
-    "total_failure": 24,
-    "last_used_ts": 1787551541.6995473,
-    "last_result_ts": 1787551602.5269225,
-    "cooldown_until_ts": 1787553402.5269265
+    "total_failure": 25,
+    "last_used_ts": 1787554595.8822713,
+    "last_result_ts": 1787554660.3447177,
+    "cooldown_until_ts": 1787558260.344722
   },
   "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641": {
     "url": "http://flrshtcq:do1x444yjtkh@64.137.96.74:6641",
@@ -46,21 +46,21 @@
   },
   "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361": {
     "url": "http://flrshtcq:do1x444yjtkh@198.23.243.226:6361",
-    "consecutive_failures": 9,
+    "consecutive_failures": 10,
     "total_success": 0,
-    "total_failure": 9,
-    "last_used_ts": 1787546730.6305466,
-    "last_result_ts": 1787546793.6934822,
-    "cooldown_until_ts": 1787561193.6934843
+    "total_failure": 10,
+    "last_used_ts": 1787554668.3458233,
+    "last_result_ts": 1787554731.0811443,
+    "cooldown_until_ts": 1787569131.0811474
   },
   "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370": {
     "url": "http://flrshtcq:do1x444yjtkh@38.154.185.97:6370",
-    "consecutive_failures": 9,
+    "consecutive_failures": 10,
     "total_success": 0,
-    "total_failure": 9,
-    "last_used_ts": 1787548155.4147909,
-    "last_result_ts": 1787548217.9160051,
-    "cooldown_until_ts": 1787562617.9160087
+    "total_failure": 10,
+    "last_used_ts": 1787554739.0883703,
+    "last_result_ts": 1787554801.9348023,
+    "cooldown_until_ts": 1787569201.934804
   },
   "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095": {
     "url": "http://flrshtcq:do1x444yjtkh@84.247.60.125:6095",
@@ -82,11 +82,11 @@
   },
   "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185": {
     "url": "http://flrshtcq:do1x444yjtkh@191.96.254.138:6185",
-    "consecutive_failures": 0,
+    "consecutive_failures": 1,
     "total_success": 16,
-    "total_failure": 16,
-    "last_used_ts": 1787551675.6158385,
-    "last_result_ts": 1787551677.7349632,
+    "total_failure": 17,
+    "last_used_ts": 1787554518.6580427,
+    "last_result_ts": 1787554587.8738263,
     "cooldown_until_ts": 0.0
   }
 }
