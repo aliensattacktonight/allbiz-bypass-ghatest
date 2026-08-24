@@ -1,0 +1,115 @@
+name: allbiz-retry-pool-test-batched
+on:
+  workflow_dispatch:
+    inputs:
+      lookups:
+        description: "Total number of lookups"
+        default: "10"
+      batch_size:
+        description: "Lookups per batch (fresh process each batch)"
+        default: "2"
+      max_attempts:
+        description: "Max proxy attempts per lookup"
+        default: "4"
+
+permissions:
+  contents: write
+
+jobs:
+  retry-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Xvfb and deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb
+          pip install pydoll-python beautifulsoup4 requests
+
+      - name: Show runner egress IP
+        run: |
+          python3 -c "import requests; print('EGRESS IP:', requests.get('https://api.ipify.org?format=json', timeout=10).json())"
+
+      - name: Show proxy pool health as restored from the repo (proves persistence)
+        run: |
+          if [ -f proxy_health.json ]; then
+            echo "--- proxy_health.json as checked out ---"
+            cat proxy_health.json
+          else
+            echo "no proxy_health.json yet -- this is the first run"
+          fi
+
+      - name: Batched full-system reliability test (fresh process per batch)
+        run: |
+          set -u
+          TOTAL="${{ github.event.inputs.lookups }}"
+          BATCH="${{ github.event.inputs.batch_size }}"
+          MAX_ATTEMPTS="${{ github.event.inputs.max_attempts }}"
+          COMBINED_LOG="batched_combined.txt"
+          : > "$COMBINED_LOG"
+
+          done_count=0
+          batch_num=0
+          sum_ok=0
+          sum_total=0
+
+          while [ "$done_count" -lt "$TOTAL" ]; do
+            remaining=$((TOTAL - done_count))
+            this_batch=$BATCH
+            if [ "$remaining" -lt "$BATCH" ]; then
+              this_batch=$remaining
+            fi
+            batch_num=$((batch_num + 1))
+
+            echo "=== BATCH $batch_num: $this_batch lookups, case-offset=$done_count ===" | tee -a "$COMBINED_LOG"
+            BATCH_LOG=$(mktemp)
+            xvfb-run -a --server-args="-screen 0 1280x900x24" python3 -u pydoll_retry_test.py "$this_batch" \
+              --case-offset "$done_count" \
+              --max-attempts "$MAX_ATTEMPTS" \
+              --proxy-file webshare_proxies.txt --cases cases.txt \
+              --state-file proxy_health.json --profile-dir "chrome_profiles_batch${batch_num}" \
+              --no-sandbox --captcha-wait 45 --challenge-wait 60 --gap 6 --retry-gap 8 \
+              > "$BATCH_LOG" 2>&1
+            cat "$BATCH_LOG" >> "$COMBINED_LOG"
+
+            line=$(grep "Success rate" "$BATCH_LOG" | tail -1)
+            batch_ok=$(echo "$line" | grep -oE '[0-9]+/[0-9]+' | head -1 | cut -d/ -f1)
+            batch_total=$(echo "$line" | grep -oE '[0-9]+/[0-9]+' | head -1 | cut -d/ -f2)
+            batch_ok=${batch_ok:-0}
+            batch_total=${batch_total:-$this_batch}
+            sum_ok=$((sum_ok + batch_ok))
+            sum_total=$((sum_total + batch_total))
+            echo "  batch $batch_num: $batch_ok/$batch_total OK" | tee -a "$COMBINED_LOG"
+            rm -f "$BATCH_LOG"
+
+            done_count=$((done_count + this_batch))
+          done
+
+          echo "" | tee -a "$COMBINED_LOG"
+          echo "=================================================================" | tee -a "$COMBINED_LOG"
+          echo "COMBINED ACROSS ALL $batch_num BATCHES: $sum_ok/$sum_total" | tee -a "$COMBINED_LOG"
+          if [ "$sum_total" -gt 0 ]; then
+            pct=$((sum_ok * 100 / sum_total))
+            echo "  = ${pct}%" | tee -a "$COMBINED_LOG"
+          fi
+          echo "=================================================================" | tee -a "$COMBINED_LOG"
+
+      - name: Persist proxy health state back to the repo
+        if: always()
+        run: |
+          git config user.name "allbiz-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add proxy_health.json
+          git diff --cached --quiet || git commit -m "update proxy health state"
+          git push || echo "nothing to push"
+
+      - name: Upload combined log and saved pages (incl. any failures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retry-test-batched-${{ github.run_id }}
+          path: |
+            batched_combined.txt
+            pydoll_*.html
+          if-no-files-found: ignore
