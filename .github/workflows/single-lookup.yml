@@ -1,0 +1,95 @@
+name: allbiz-single-lookup
+on:
+  workflow_dispatch:
+    inputs:
+      business_name:
+        description: "Business name to search for"
+        required: true
+      state:
+        description: "State code, e.g. US_FL"
+        required: true
+      request_id:
+        description: "Opaque id the caller uses to match this run's callback to its own pending request"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    # One real lookup with retries rarely needs more than ~4 minutes even in
+    # the worst case (4 attempts x ~65s each); this is a hard backstop so a
+    # stuck run doesn't sit in the queue forever leaving the caller hanging
+    # past its own timeout anyway.
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-pydoll
+
+      - name: Install Xvfb and deps
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y xvfb
+          pip install pydoll-python beautifulsoup4 requests
+
+      - name: Run the lookup
+        id: lookup
+        run: |
+          xvfb-run -a --server-args="-screen 0 1280x900x24" python3 -u single_lookup.py \
+            "${{ github.event.inputs.business_name }}" "${{ github.event.inputs.state }}" \
+            --request-id "${{ github.event.inputs.request_id }}" \
+            --proxy-file webshare_proxies.txt --state-file proxy_health.json \
+            --profile-dir chrome_profile_single \
+            --no-sandbox --captcha-wait 45 --challenge-wait 60 --retry-gap 8 \
+            --out result.json || true
+
+      - name: Persist proxy health state back to the repo
+        if: always()
+        run: |
+          git config user.name "allbiz-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add proxy_health.json
+          git diff --cached --quiet || git commit -m "update proxy health state (single lookup)"
+          git push || echo "nothing to push"
+
+      # Runs no matter what happened above -- a crashed step still needs to
+      # tell the waiting FastAPI request something, or it just times out
+      # having learned nothing instead of getting a clear error.
+      - name: Report result back to the FastAPI callback
+        if: always()
+        env:
+          CALLBACK_BASE_URL: ${{ secrets.CALLBACK_BASE_URL }}
+          CALLBACK_TOKEN: ${{ secrets.CALLBACK_TOKEN }}
+        run: |
+          if [ ! -f result.json ]; then
+            echo '{"status":"error","error":"workflow crashed before writing a result"}' > result.json
+            python3 -c "
+import json
+d = json.load(open('result.json'))
+d['request_id'] = '${{ github.event.inputs.request_id }}'
+json.dump(d, open('result.json', 'w'))
+"
+          fi
+          cat result.json
+          curl -sS -X POST "$CALLBACK_BASE_URL/callback/${{ github.event.inputs.request_id }}" \
+            -H "Content-Type: application/json" \
+            -H "X-Callback-Token: $CALLBACK_TOKEN" \
+            --data-binary @result.json \
+            --max-time 15 --retry 2 --retry-delay 2 \
+            || echo "callback POST failed -- FastAPI's own wait will time out and report that"
+
+      - name: Upload result + any saved failure pages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: single-lookup-${{ github.run_id }}
+          path: |
+            result.json
+            pydoll_rel_*.html
+          if-no-files-found: ignore
