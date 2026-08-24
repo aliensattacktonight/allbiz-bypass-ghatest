@@ -301,6 +301,9 @@ async def one_lookup(tab, args, case, watcher, errors_before, tag="x"):
 
     out["record_ok"] = True
     out["record_name"] = data.get("name")
+    out["record"] = data  # full raw JSON-LD -- callers needing more than the
+    # name (the production API does) read structured fields straight out of
+    # this instead of the harness having to know every field a caller wants.
     net_after = await net_count(tab)
     if net_before is not None and net_after is not None:
         out["requests"] = net_after - net_before
